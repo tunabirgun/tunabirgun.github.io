@@ -23,14 +23,24 @@
       font-size: 28px;
       margin-top: 40px;
     }
+    .education-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-top: 20px;
+    }
+    .edu-left {
+      width: 40%;
+    }
+    .edu-right {
+      width: 55%;
+      font-style: italic;
+      font-size: 18px;
+      color: lightgray;
+    }
     p {
       font-size: 20px;
-    }
-    .subtext {
-      font-size: 18px;
-      font-style: italic;
-      margin-top: 5px;
-      color: lightgray;
+      margin: 5px 0;
     }
   </style>
 </head>
@@ -38,26 +48,35 @@
   <a href="index.html">← back</a>
   
   <h1>biography</h1>
-
+<br>
   <h2>employment</h2>
   <p>research assistant, department of molecular biology and genetics<br>
   istanbul yeni yüzyıl university, türkiye<br>
   (2024 – present)</p>
-<br><br>
-  <h2>education</h2>
-  <p>master's degree, molecular biology-genetics and biotechnology<br>
-  istanbul technical university, türkiye<br>
-  (2024 – present)</p>
-  <p class="subtext">
-    currently working on metabolic effects of various stress factors on s. cerevisiae model strains - at mayalab (istanbul technical university, türkiye).
-  </p>
 <br>
-  <p>bachelor's degree in bioengineering<br>
-  marmara university, türkiye<br>
-  (2020 - 2024)</p>
-  <p class="subtext">
-    worked on parkinson disease's biomarker investigations using ppi (protein-protein interaction) network of transcriptomic samples. also contributed to huntington's disease investigations of axanlab (gebze technical university, türkiye) by the means of integration of single-cell transcriptomics datasets from different sources.
-  </p>
+  <h2>education</h2>
+
+  <div class="education-entry">
+    <div class="edu-left">
+      <p>master's degree, molecular biology-genetics and biotechnology<br>
+      istanbul technical university, türkiye<br>
+      (2024-09-02 – present)</p>
+    </div>
+    <div class="edu-right">
+      currently working on metabolic effects of various stress factors on s. cerevisiae metabolism - at mayalab (istanbul technical university, türkiye).
+    </div>
+  </div>
+
+  <div class="education-entry">
+    <div class="edu-left">
+      <p>bachelor's degree, bioengineering<br>
+      marmara university, türkiye<br>
+      (2020 - 2024)</p>
+    </div>
+    <div class="edu-right">
+      worked on parkinson disease's biomarker investigations using ppi (protein-protein interaction) network of transcriptomic samples. also contributed to huntington's disease investigations of axanlab (gebze technical university, türkiye) by the means of integration of single-cell transcriptomics datasets from different sources.
+    </div>
+  </div>
 
 </body>
 </html>
