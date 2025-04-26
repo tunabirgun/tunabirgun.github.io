@@ -2,58 +2,78 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>bio - tunabirgun</title>
   <style>
     body {
       background-color: black;
       color: white;
       font-family: 'Sabon', serif;
-      padding: 50px;
+      padding: 5vw;
       line-height: 1.6;
       text-transform: lowercase;
+      margin: 0;
     }
     a {
       color: lightgray;
       text-decoration: none;
+      font-size: 1.2rem;
     }
     h1 {
-      font-size: 36px;
+      font-size: 2.5rem;
+      margin-top: 1rem;
     }
     h2 {
-      font-size: 28px;
-      margin-top: 40px;
+      font-size: 2rem;
+      margin-top: 2rem;
     }
     .education-entry {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-top: 20px;
+      margin-top: 2rem;
+      flex-wrap: wrap;
     }
-    .edu-left {
-      width: 40%;
+    .edu-left, .edu-right {
+      flex: 1 1 40%;
+      margin-bottom: 1rem;
     }
     .edu-right {
-      width: 55%;
       font-style: italic;
-      font-size: 18px;
+      font-size: 1rem;
       color: lightgray;
+      padding-left: 2vw;
     }
     p {
-      font-size: 20px;
-      margin: 5px 0;
+      font-size: 1.2rem;
+      margin: 0.5rem 0;
+    }
+
+    /* Responsive adjustments for small screens */
+    @media (max-width: 768px) {
+      .education-entry {
+        flex-direction: column;
+      }
+      .edu-left, .edu-right {
+        flex: 1 1 100%;
+        padding-left: 0;
+      }
+      body {
+        padding: 5vw 3vw;
+      }
     }
   </style>
 </head>
 <body>
   <a href="index.html">← back</a>
-  
+
   <h1>biography</h1>
-<br>
+
   <h2>employment</h2>
   <p>research assistant, department of molecular biology and genetics<br>
   istanbul yeni yüzyıl university, türkiye<br>
   (2024 – present)</p>
-<br>
+
   <h2>education</h2>
 
   <div class="education-entry">
@@ -71,7 +91,7 @@
     <div class="edu-left">
       <p>bachelor's degree, bioengineering<br>
       marmara university, türkiye<br>
-      (2020 - 2024)</p>
+      (2020 – 2024)</p>
     </div>
     <div class="edu-right">
       worked on parkinson disease's biomarker investigations using ppi (protein-protein interaction) network of transcriptomic samples. also contributed to huntington's disease investigations of axanlab (gebze technical university, türkiye) by the means of integration of single-cell transcriptomics datasets from different sources.
