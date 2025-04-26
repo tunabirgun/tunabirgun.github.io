@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>r - count table to differential expression analysis</title>
+  <style>
+    body {
+      background-color: black;
+      color: white;
+      font-family: 'Sabon', serif;
+      padding: 50px;
+      line-height: 1.8;
+      text-transform: lowercase;
+    }
+    a {
+      color: lightgray;
+      text-decoration: none;
+    }
+    h1, h2 {
+      font-size: 28px;
+      margin-top: 30px;
+    }
+    pre {
+      background-color: #222;
+      color: white;
+      padding: 15px;
+      overflow-x: auto;
+      font-family: monospace;
+      font-size: 16px;
+    }
+    p {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+  <a href="codes.html">← back</a>
+
+  <h1>r - count table to differential expression analysis</h1>
+
+  <h2>1. set working directory and load required libraries</h2>
+  <p>first, set your working directory where your files are located, and load all the libraries needed for deseq2 analysis.</p>
+  <pre>
+setwd("D:/deseq2")
+library(DESeq2)
+library(ggplot2)
+library(pheatmap)
+library(tidyverse)
+library(vsn)
+library(ggrepel)
+library(clusterProfiler)
+library(org.Sc.sgd.db)
+library(rtracklayer)
+
+install.packages("gprofiler2")
+library(gprofiler2)
+  </pre>
+
+  <h2>2. load count data and metadata</h2>
+  <p>read the count table, create a sample-treatment mapping table (metadata).</p>
+  <pre>
+ct <- read.table("count.out", header = TRUE, row.names = 1)
+samples <- colnames(ct)
+treatment <- c("G75", "G75", "S0", "S0", "S75", "S75", "SS")
+meta <- data.frame(Sample = samples, Condition = treatment)
+rownames(meta) <- samples
+  </pre>
+
+  <h2>3. run deseq2 differential expression analysis</h2>
+  <p>create deseq2 object, filter low-count genes, set reference level, run the pipeline, and extract results for each comparison.</p>
+  <pre>
+dds <- DESeqDataSetFromMatrix(countData = ct, colData = meta, design = ~ Condition)
+dds <- dds[rowSums(counts(dds)) > 20, ]
+dds$Condition <- relevel(dds$Condition, ref = "SS")
+dds <- DESeq(dds)
+norm_counts <- counts(dds, normalized = TRUE)
+write.table(norm_counts, "normalized_counts.csv", sep = "\t", quote = FALSE, col.names = NA)
+res_G75 <- results(dds, contrast = c("Condition", "G75", "SS"))
+res_S0  <- results(dds, contrast = c("Condition", "S0", "SS"))
+res_S75 <- results(dds, contrast = c("Condition", "S75", "SS"))
+  </pre>
+
+  <h2>4. create a pca plot and save it</h2>
+  <p>visualize the variance across your samples by plotting a pca plot and saving it as a png file.</p>
+  <pre>
+vsd <- vst(dds, blind = FALSE)
+pca_data <- plotPCA(vsd, intgroup = "Condition", returnData = TRUE)
+percentVar <- round(100 * attr(pca_data, "percentVar"))
+
+p <- ggplot(pca_data, aes(PC1, PC2, color = Condition, label = name)) +
+  geom_point(size = 4) +
+  geom_text_repel(size = 3) +
+  xlab(paste0("PC1: ", percentVar[1], "% variance")) +
+  ylab(paste0("PC2: ", percentVar[2], "% variance")) +
+  ggtitle("pca of mg2+ deficiency conditions") +
+  theme_minimal() +
+  theme(plot.background = element_rect(fill = "white", color = NA),
+        panel.background = element_rect(fill = "white", color = NA))
+ggsave("PCA_plot.png", plot = p, width = 7, height = 5)
+  </pre>
+
+  <h2>5. identify and save significant genes</h2>
+  <p>define threshold values, create a function to select significantly differentially expressed genes, and run it for each comparison.</p>
+  <pre>
+padj_cutoff <- 0.05
+log2FC_cutoff <- 1
+
+process_deseq_results <- function(res, comparison_name, padj_cutoff = 0.05, log2FC_cutoff = 1) {
+  res_df <- as.data.frame(res) %>%
+    rownames_to_column(var = "gene") %>%
+    filter(!is.na(padj))
+  
+  sig_genes <- res_df %>%
+    filter(padj < padj_cutoff & abs(log2FoldChange) >= log2FC_cutoff)
+  
+  up_reg_genes <- sig_genes %>%
+    filter(log2FoldChange >= log2FC_cutoff)
+  
+  down_reg_genes <- sig_genes %>%
+    filter(log2FoldChange <= -log2FC_cutoff)
+  
+  write.csv(sig_genes, paste0("sig_genes_", comparison_name, ".csv"), row.names = FALSE)
+  write.csv(up_reg_genes, paste0("up_reg_genes_", comparison_name, ".csv"), row.names = FALSE)
+  write.csv(down_reg_genes, paste0("down_reg_genes_", comparison_name, ".csv"), row.names = FALSE)
+  
+  return(list(
+    sig_genes = sig_genes,
+    up_reg_genes = up_reg_genes,
+    down_reg_genes = down_reg_genes
+  ))
+}
+
+results_G75 <- process_deseq_results(res_G75, "G75_vs_SS")
+results_S0  <- process_deseq_results(res_S0, "S0_vs_SS")
+results_S75 <- process_deseq_results(res_S75, "S75_vs_SS")
+  </pre>
+
+</body>
+</html>
