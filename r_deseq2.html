@@ -31,6 +31,10 @@
     p {
       font-size: 20px;
     }
+    .references {
+      font-size: 16px;
+      margin-top: 40px;
+    }
   </style>
 </head>
 <body>
@@ -39,9 +43,9 @@
   <h1>r - count table to differential expression analysis</h1>
 
   <h2>1. set working directory and load required libraries</h2>
-  <p>first, set your working directory where your files are located, and load all the libraries needed for deseq2 analysis.</p>
+  <p>first, set your working directory to the location of your count data files. then, load the necessary r packages for differential expression analysis and visualization.</p>
   <pre>
-setwd("D:/deseq2")
+setwd("your/working/directory/path")
 library(DESeq2)
 library(ggplot2)
 library(pheatmap)
@@ -57,31 +61,34 @@ library(gprofiler2)
   </pre>
 
   <h2>2. load count data and metadata</h2>
-  <p>read the count table, create a sample-treatment mapping table (metadata).</p>
+  <p>read in your count data and create a metadata frame that describes the experimental conditions for each sample. replace the placeholder group names with your actual experimental conditions.</p>
   <pre>
 ct <- read.table("count.out", header = TRUE, row.names = 1)
 samples <- colnames(ct)
-treatment <- c("G75", "G75", "S0", "S0", "S75", "S75", "SS")
+treatment <- c("sample_group1", "sample_group1", 
+               "sample_group2", "sample_group2", 
+               "sample_group3", "sample_group3", 
+               "reference_group")
 meta <- data.frame(Sample = samples, Condition = treatment)
 rownames(meta) <- samples
   </pre>
 
   <h2>3. run deseq2 differential expression analysis</h2>
-  <p>create deseq2 object, filter low-count genes, set reference level, run the pipeline, and extract results for each comparison.</p>
+  <p>create a deseq2 dataset, filter out low-count genes, set the reference level, and perform the differential expression analysis.</p>
   <pre>
 dds <- DESeqDataSetFromMatrix(countData = ct, colData = meta, design = ~ Condition)
 dds <- dds[rowSums(counts(dds)) > 20, ]
-dds$Condition <- relevel(dds$Condition, ref = "SS")
+dds$Condition <- relevel(dds$Condition, ref = "reference_group")
 dds <- DESeq(dds)
 norm_counts <- counts(dds, normalized = TRUE)
 write.table(norm_counts, "normalized_counts.csv", sep = "\t", quote = FALSE, col.names = NA)
-res_G75 <- results(dds, contrast = c("Condition", "G75", "SS"))
-res_S0  <- results(dds, contrast = c("Condition", "S0", "SS"))
-res_S75 <- results(dds, contrast = c("Condition", "S75", "SS"))
+res_group1 <- results(dds, contrast = c("Condition", "sample_group1", "reference_group"))
+res_group2 <- results(dds, contrast = c("Condition", "sample_group2", "reference_group"))
+res_group3 <- results(dds, contrast = c("Condition", "sample_group3", "reference_group"))
   </pre>
 
   <h2>4. create a pca plot and save it</h2>
-  <p>visualize the variance across your samples by plotting a pca plot and saving it as a png file.</p>
+  <p>perform a variance-stabilizing transformation and generate a pca plot to visualize sample clustering.</p>
   <pre>
 vsd <- vst(dds, blind = FALSE)
 pca_data <- plotPCA(vsd, intgroup = "Condition", returnData = TRUE)
@@ -92,7 +99,7 @@ p <- ggplot(pca_data, aes(PC1, PC2, color = Condition, label = name)) +
   geom_text_repel(size = 3) +
   xlab(paste0("PC1: ", percentVar[1], "% variance")) +
   ylab(paste0("PC2: ", percentVar[2], "% variance")) +
-  ggtitle("pca of mg2+ deficiency conditions") +
+  ggtitle("pca of experimental conditions") +
   theme_minimal() +
   theme(plot.background = element_rect(fill = "white", color = NA),
         panel.background = element_rect(fill = "white", color = NA))
@@ -100,7 +107,7 @@ ggsave("PCA_plot.png", plot = p, width = 7, height = 5)
   </pre>
 
   <h2>5. identify and save significant genes</h2>
-  <p>define threshold values, create a function to select significantly differentially expressed genes, and run it for each comparison.</p>
+  <p>define thresholds for significance, create a function to process deseq2 results, and apply it to each comparison.</p>
   <pre>
 padj_cutoff <- 0.05
 log2FC_cutoff <- 1
@@ -130,10 +137,19 @@ process_deseq_results <- function(res, comparison_name, padj_cutoff = 0.05, log2
   ))
 }
 
-results_G75 <- process_deseq_results(res_G75, "G75_vs_SS")
-results_S0  <- process_deseq_results(res_S0, "S0_vs_SS")
-results_S75 <- process_deseq_results(res_S75, "S75_vs_SS")
+results_group1 <- process_deseq_results(res_group1, "group1_vs_reference")
+results_group2 <- process_deseq_results(res_group2, "group2_vs_reference")
+results_group3 <- process_deseq_results(res_group3, "group3_vs_reference")
   </pre>
+
+  <div class="references">
+    <h2>references</h2>
+    <p>love, m. i., huber, w., & anders, s. (2014). moderated estimation of fold change and dispersion for rna-seq data with deseq2. <i>genome biology</i>, 15(12), 550. https://doi.org/10.1186/s13059-014-0550-8</p>
+    <p>anders, s., & huber, w. (2010). differential expression analysis for sequence count data. <i>genome biology</i>, 11(10), r106. https://doi.org/10.1186/gb-2010-11-10-r106</p>
+    <p>love, m. i., huber, w., & anders, s. (2014). deseq2: differential gene expression analysis based on the negative binomial distribution. <i>bioconductor</i>. https://bioconductor.org/packages/release/bioc/html/DESeq2.html</p>
+    <p>love, m. i., huber, w., & anders, s. (2014). applying a variance stabilizing transformation (vst) to the count data. <i>bioconductor</i>. https://bioconductor.org/packages/release/bioc/html/DESeq2.html</p>
+    <p>lee, s., kim, j., & shin, s. (2018). a simple guideline to assess the characteristics of rna-seq data. <i>bioinformatics and biology insights</i>, 12, 1177932218782606. https://doi.org/10.1177/1177932218782606</p>
+  </div>
 
 </body>
 </html>
